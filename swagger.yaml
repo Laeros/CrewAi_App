@@ -1,0 +1,115 @@
+openapi: 3.0.0
+info:
+  title: API de Gestión de Agentes AI con CrewAI
+  version: 1.0.0
+  description: API para crear, listar, chatear y gestionar agentes AI y herramientas.
+
+paths:
+  /api/agents:
+    post:
+      summary: Crear un nuevo agente AI
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name: { type: string }
+                prompt: { type: string }
+                llm_provider: { type: string }
+                model: { type: string }
+                temperature: { type: number }
+                max_tokens: { type: integer }
+                tools:
+                  type: array
+                  items: { type: string }
+              required: [name, prompt, llm_provider, model, temperature, max_tokens]
+      responses:
+        '201':
+          description: Agente creado exitosamente
+
+    get:
+      summary: Listar todos los agentes AI
+      responses:
+        '200':
+          description: Lista de agentes
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { type: object }
+
+  /api/chat/{agent_id}:
+    post:
+      summary: Chatear con un agente AI
+      parameters:
+        - name: agent_id
+          in: path
+          required: true
+          schema: { type: integer }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                message: { type: string }
+              required: [message]
+      responses:
+        '200':
+          description: Respuesta del agente AI
+
+  /api/tools:
+    post:
+      summary: Crear una herramienta
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name: { type: string }
+              required: [name]
+      responses:
+        '201':
+          description: Herramienta creada
+
+    get:
+      summary: Listar herramientas
+      responses:
+        '200':
+          description: Lista de herramientas
+
+  /api/tools/{tool_id}:
+    put:
+      summary: Editar una herramienta
+      parameters:
+        - name: tool_id
+          in: path
+          required: true
+          schema: { type: integer }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name: { type: string }
+      responses:
+        '200':
+          description: Herramienta actualizada
+
+    delete:
+      summary: Eliminar una herramienta
+      parameters:
+        - name: tool_id
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        '204':
+          description: Eliminada correctamente

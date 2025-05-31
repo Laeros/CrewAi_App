@@ -1,0 +1,14 @@
+
+docker-compose down -v
+
+docker-compose up --build -d
+
+
+docker-compose exec backend bash
+
+flask db init
+flask db migrate -m "initial full schema"
+flask db upgrade
+
+
+docker exec -t parcialcrewai-db pg_dump -U postgres agents_db > backup.sql

@@ -1,0 +1,27 @@
+services:
+  db:
+    image: postgres:16
+    container_name: ev3crewai-db
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: agents_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+  backend:
+    container_name: ev3crewai-backend
+    build: .
+    ports:
+      - "5000:5000"
+    environment:
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - DATABASE_URL=${DATABASE_URL}
+    depends_on:
+      - db
+
+volumes:
+  pgdata:
