@@ -1,12 +1,15 @@
+from crewai import Agent
 from openai import OpenAI
 import os
 import google.generativeai as genai
 
 import requests
 
+
+client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+
 def create_agent_response(agent, message):
     if agent.provider.lower() == 'openai':
-        client = OpenAI(api_key=os.getenv('OPENAI_API_KEY'))
         completion = client.chat.completions.create(
             model="gpt-4o",
             messages=[{"role": "system", "content": agent.prompt}, {"role": "user", "content": message}],
@@ -23,19 +26,28 @@ def create_agent_response(agent, message):
         return "LLM provider no soportado"
 
 
-import requests
+def call_llm(agent, message):
+    # Construir tools reales
+    tools = []
+    for tool in agent.tools:
+        tools.append({
+            "type": "function",
+            "function": {
+                "name": tool.name,
+                "description": tool.description,
+                "parameters": tool.parameters
+            }
+        })
 
-def buscar_web(query: str) -> str:
-    """
-    Realiza una búsqueda web usando Bing o DuckDuckGo y devuelve un resumen.
-    """
-    # Ejemplo con DuckDuckGo Instant Answer API
-    url = f"https://api.duckduckgo.com/?q={query}&format=json"
-    response = requests.get(url)
-    data = response.json()
+    messages = [
+        {"role": "system", "content": agent.prompt},
+        {"role": "user", "content": message}
+    ]
 
-    abstract = data.get("AbstractText", "")
-    if abstract:
-        return abstract
-    else:
-        return f"No se encontraron resultados para '{query}'."
+    response = client.chat.completions.create(
+        model=agent.model,
+        messages=messages,
+        tools=tools if tools else None
+    )
+
+    return response.choices[0].message.content
