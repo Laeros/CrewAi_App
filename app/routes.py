@@ -1,6 +1,8 @@
 import json
 
 from flask import Blueprint, request, jsonify
+from openai import OpenAI
+
 from app.models import Agent as AgentModel, Tool as ToolModel, ChatLog, db, Tool
 from crewai import Agent, Task, Crew
 import os
@@ -47,6 +49,15 @@ def create_tool():
     if isinstance(tool_parameters, str):
         tool_parameters = json.loads(tool_parameters)
 
+    # Normaliza los parámetros para que cumplan con el esquema que espera OpenAI
+    # Si el usuario manda solo las propiedades, les añadimos "type": "object" y "required"
+    if "type" not in tool_parameters:
+        tool_parameters = {
+            "type": "object",
+            "properties": tool_parameters,
+            "required": list(tool_parameters.keys())  # todos los campos requeridos por defecto
+        }
+
     tool = ToolModel(
         name=data['name'],
         description=data['description'],
@@ -55,6 +66,7 @@ def create_tool():
     db.session.add(tool)
     db.session.commit()
     return jsonify({"message": "Tool creada exitosamente", "tool_id": tool.id}), 201
+
 
 # Endpoint para listar todos los agentes
 @api_bp.route('/agents', methods=['GET'])
@@ -107,27 +119,13 @@ def list_tools():
     return jsonify(tool_list), 200
 
 # Endpoint para actualizar una herramienta
-import json
-
 @api_bp.route('/tools/<int:tool_id>', methods=['PUT'])
 def update_tool(tool_id):
     data = request.get_json()
     tool = ToolModel.query.get_or_404(tool_id)
-
-    # Actualiza los campos si están presentes en el JSON de la petición
     tool.name = data.get('name', tool.name)
-    tool.description = data.get('description', tool.description)
-
-    # Convierte a objeto JSON real si viene como string
-    tool_parameters = data.get('parameters')
-    if tool_parameters:
-        if isinstance(tool_parameters, str):
-            tool_parameters = json.loads(tool_parameters)
-        tool.parameters = tool_parameters
-
     db.session.commit()
     return jsonify({"message": "Tool actualizada correctamente"}), 200
-
 
 # Endpoint para eliminar una herramienta
 @api_bp.route('/tools/<int:tool_id>', methods=['DELETE'])
@@ -163,10 +161,11 @@ def chat_with_agent(agent_id):
     data = request.get_json()
     agent_db = AgentModel.query.get_or_404(agent_id)
 
+    # Usa el cliente oficial de OpenAI
     os.environ["OPENAI_API_KEY"] = os.getenv("OPENAI_API_KEY")
-    llm_model = agent_db.model
+    client = OpenAI()
 
-    # Configuración de herramientas solo si existen y están bien definidas
+    # Prepara los tools desde la BD
     tools = []
     for tool in agent_db.tools:
         if tool.description and tool.parameters:
@@ -175,59 +174,75 @@ def chat_with_agent(agent_id):
                 "function": {
                     "name": tool.name,
                     "description": tool.description,
-                    "parameters": tool.parameters  # Debe ser un dict bien formado
+                    "parameters": tool.parameters
                 }
             })
 
-    # Genera el Crew (sin error de tools vacías)
-    if tools:
-        crew = Crew(
-            agents=[
-                Agent(
-                    role="user",
-                    goal="Responder usando el prompt configurado y las herramientas",
-                    backstory=agent_db.prompt,
-                    verbose=True,
-                    allow_delegation=True,
-                    llm=llm_model
-                )
-            ],
-            tasks=[
-                Task(
-                    description=data['message'],
-                    expected_output="Una respuesta breve y clara del agente.",
-                    agent=None  # No es necesario, ya está en la lista de agentes
-                )
-            ],
-            tools=tools
+    # Usa el cliente con tipado correcto
+    from openai.types.chat import (
+        ChatCompletionSystemMessageParam,
+        ChatCompletionUserMessageParam,
+        ChatCompletionToolMessageParam
+    )
+
+    # Arma los mensajes iniciales
+    messages = [
+        ChatCompletionSystemMessageParam(role="system", content=agent_db.prompt),
+        ChatCompletionUserMessageParam(role="user", content=data["message"])
+    ]
+
+    # Primera llamada a la API (con tools)
+    response = client.chat.completions.create(
+        model=agent_db.model,
+        messages=messages,
+        tools=tools if tools else None,
+        tool_choice="auto"
+    )
+
+    # Extrae la tool_call (si existe)
+    tool_call = response.choices[0].message.tool_calls[0] if response.choices[0].message.tool_calls else None
+
+    if tool_call:
+        tool_name = tool_call.function.name
+        tool_args = json.loads(tool_call.function.arguments)
+
+        # Ejecuta la función real (en este ejemplo simula un resultado de búsqueda)
+        if tool_name == "buscar_web":
+            query = tool_args.get("query", "")
+            # Aquí deberías poner la lógica real de la búsqueda web
+            tool_response = f"Resultados breves de búsqueda web sobre: {query}"
+
+        else:
+            tool_response = f"No hay implementación para la herramienta: {tool_name}"
+
+        # Arma el mensaje de respuesta de la tool con el tool_call_id correcto
+        tool_message = ChatCompletionToolMessageParam(
+            role="tool",
+            content=tool_response,
+            tool_call_id=tool_call.id  # ¡Clave!
         )
+
+        # Añade los mensajes previos y la respuesta de la tool
+        messages.append(response.choices[0].message)  # assistant que contiene el tool_call
+        messages.append(tool_message)  # tool que responde a ese tool_call
+
+        # Segunda llamada para que el LLM complete la respuesta final
+        final_response = client.chat.completions.create(
+            model=agent_db.model,
+            messages=messages
+        )
+
+        final_message = final_response.choices[0].message.content
     else:
-        crew = Crew(
-            agents=[
-                Agent(
-                    role="user",
-                    goal="Responder usando el prompt configurado",
-                    backstory=agent_db.prompt,
-                    verbose=True,
-                    allow_delegation=True,
-                    llm=llm_model
-                )
-            ],
-            tasks=[
-                Task(
-                    description=data['message'],
-                    expected_output="Una respuesta breve y clara del agente.",
-                    agent=None
-                )
-            ]
-        )
+        # No hubo tool_call, devuelve la respuesta generada directamente
+        final_message = response.choices[0].message.content
 
-    output = crew.kickoff()
-
-    # Guarda el log del chat
-    log = ChatLog(agent_id=agent_id, message=data['message'])
+    # Guarda el log
+    log = ChatLog(agent_id=agent_id, message=data["message"])
     db.session.add(log)
     db.session.commit()
 
-    return jsonify({"respuesta": str(output)}), 200
-
+    # Devuelve la respuesta final al cliente
+    return jsonify({
+        "respuesta": final_message
+    })

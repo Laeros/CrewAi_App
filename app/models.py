@@ -14,7 +14,7 @@ class Agent(db.Model):
     temperature = db.Column(db.Float, nullable=False, default=0.1)
     max_tokens = db.Column(db.Integer, nullable=False, default=50)
 
-    tools = db.relationship('tool', secondary='agent_tool', backref='agents')
+    tools = db.relationship('Tool', secondary='agent_tool', backref='agent')
 
 class Tool(db.Model):
     __tablename__ = 'tool'
