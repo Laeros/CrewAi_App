@@ -1,0 +1,194 @@
+/* Root and app container styles */
+#root {
+  width: 100vw;
+  height: 100vh;
+  margin: 0;
+  padding: 0;
+  background-color: #0f0f0f;
+  overflow: hidden;
+}
+
+/* Logo and branding styles updated for dark theme */
+.logo {
+  height: 6em;
+  padding: 1.5em;
+  will-change: filter;
+  transition: filter 300ms;
+}
+
+.logo:hover {
+  filter: drop-shadow(0 0 2em #3b82f6aa);
+}
+
+.logo.react:hover {
+  filter: drop-shadow(0 0 2em #61dafbaa);
+}
+
+@keyframes logo-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  a:nth-of-type(2) .logo {
+    animation: logo-spin infinite 20s linear;
+  }
+}
+
+.card {
+  padding: 2em;
+  background-color: #171717;
+  border-radius: 12px;
+  border: 1px solid #2d2d2d;
+  color: #ffffff;
+}
+
+.read-the-docs {
+  color: #8e8ea0;
+}
+
+/* Agents Page - Updated for dark theme */
+.page-container {
+  max-width: 800px;
+  margin: 40px auto;
+  padding: 24px;
+  background-color: #171717;
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+  border: 1px solid #2d2d2d;
+}
+
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+}
+
+.page-title {
+  font-size: 2rem;
+  font-weight: bold;
+  color: #ffffff;
+  margin: 0;
+}
+
+.primary-btn {
+  background-color: #3b82f6;
+  color: white;
+  padding: 10px 16px;
+  border: none;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.primary-btn:hover {
+  background-color: #2563eb;
+}
+
+.page-content {
+  padding-top: 10px;
+}
+
+/* Chat Page - Updated for dark theme */
+.chat-page {
+  max-width: 1200px;
+  margin: 40px auto;
+  padding: 24px;
+  background-color: #171717;
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+  border: 1px solid #2d2d2d;
+}
+
+.chat-title {
+  font-size: 2rem;
+  font-weight: bold;
+  margin-bottom: 24px;
+  color: #ffffff;
+  text-align: center;
+}
+
+.chat-layout {
+  display: flex;
+  gap: 24px;
+}
+
+.agent-panel {
+  flex: 1;
+  max-width: 300px;
+  border-right: 2px solid #2d2d2d;
+  padding-right: 16px;
+}
+
+.chat-panel {
+  flex: 2;
+  padding-left: 16px;
+}
+
+/* Tools Page - Updated for dark theme */
+.tools-page {
+  max-width: 1000px;
+  margin: 40px auto;
+  padding: 24px;
+  background-color: #171717;
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+  border: 1px solid #2d2d2d;
+}
+
+.tools-title {
+  font-size: 2rem;
+  font-weight: 700;
+  margin-bottom: 20px;
+  color: #ffffff;
+  text-align: center;
+}
+
+.tools-actions {
+  text-align: center;
+  margin-bottom: 24px;
+}
+
+.create-btn {
+  background-color: #3b82f6;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  font-weight: 500;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.create-btn:hover {
+  background-color: #2563eb;
+}
+
+.tools-content {
+  margin-top: 16px;
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: #1f2937;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #374151;
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #4b5563;
+}

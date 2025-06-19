@@ -15,6 +15,10 @@ def create_app():
     db.init_app(app)
     migrate = Migrate(app, db)
 
+    # Habilitar CORS para el frontend en localhost:5173
+    CORS(app, resources={r"/api/*": {"origins": "http://localhost:5173"}})
+
+    # Registrar rutas
     from .routes import api_bp
     app.register_blueprint(api_bp, url_prefix='/api')
 
