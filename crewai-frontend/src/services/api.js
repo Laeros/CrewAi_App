@@ -1,24 +1,27 @@
 // src/services/api.js
 import axios from 'axios';
 
-// Crear instancia de axios con configuración base
+// Usar variable de entorno si existe, sino usar localhost por defecto
+const baseURL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api';
+
+// Crear instancia de axios
 const api = axios.create({
-  baseURL: 'https://crewaiapp-production.up.railway.app',
+  baseURL,
   headers: {
     'Content-Type': 'application/json',
   },
 });
 
-// Variable para almacenar el token en memoria
+// Variable para almacenar token JWT en memoria
 let jwtToken = null;
 
-// Función para establecer el token JWT (memoria + localStorage)
+// Establecer token
 export function setAuthToken(token) {
   jwtToken = token;
   localStorage.setItem('jwtToken', token);
 }
 
-// Función para cargar token desde localStorage al iniciar app
+// Cargar token al iniciar
 export function loadAuthToken() {
   const storedToken = localStorage.getItem('jwtToken');
   if (storedToken) {
@@ -26,13 +29,13 @@ export function loadAuthToken() {
   }
 }
 
-// Función para cerrar sesión
+// Cerrar sesión
 export function clearAuthToken() {
   jwtToken = null;
   localStorage.removeItem('jwtToken');
 }
 
-// Interceptor para incluir el token JWT en cada request
+// Incluir token en headers
 api.interceptors.request.use(
   (config) => {
     if (jwtToken) {
@@ -43,13 +46,12 @@ api.interceptors.request.use(
   (error) => Promise.reject(error)
 );
 
-// Interceptor para manejar errores globales (ej. 401)
+// Manejo global de errores (ej. 401)
 api.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401) {
       console.warn('Token expirado o sesión no válida');
-      // Aquí puedes redirigir o mostrar un mensaje
       // window.location.href = '/login';
     }
     return Promise.reject(error);
@@ -58,68 +60,68 @@ api.interceptors.response.use(
 
 // -------------------- AGENTES --------------------
 
-export async function fetchAgents() {
+export const fetchAgents = async () => {
   const res = await api.get('/agents');
   return res.data;
-}
+};
 
-export async function createAgent(agent) {
+export const createAgent = async (agent) => {
   const res = await api.post('/agents', agent);
   return res.data;
-}
+};
 
-export async function updateAgent(agentId, agent) {
+export const updateAgent = async (agentId, agent) => {
   const res = await api.put(`/agents/${agentId}`, agent);
   return res.data;
-}
+};
 
-export async function deleteAgent(agentId) {
+export const deleteAgent = async (agentId) => {
   const res = await api.delete(`/agents/${agentId}`);
   return res.data;
-}
+};
 
 // -------------------- HERRAMIENTAS --------------------
 
-export async function fetchTools() {
+export const fetchTools = async () => {
   const res = await api.get('/tools');
   return res.data;
-}
+};
 
-export async function createTool(tool) {
+export const createTool = async (tool) => {
   const res = await api.post('/tools', tool);
   return res.data;
-}
+};
 
-export async function updateTool(toolId, tool) {
+export const updateTool = async (toolId, tool) => {
   const res = await api.put(`/tools/${toolId}`, tool);
   return res.data;
-}
+};
 
-export async function deleteTool(toolId) {
+export const deleteTool = async (toolId) => {
   const res = await api.delete(`/tools/${toolId}`);
   return res.data;
-}
+};
 
 // -------------------- CHAT --------------------
 
-export async function fetchChats(agentId) {
+export const fetchChats = async (agentId) => {
   const res = await api.get(`/agents/${agentId}/chats`);
   return res.data;
-}
+};
 
-export async function deleteChats(agentId) {
+export const deleteChats = async (agentId) => {
   const res = await api.delete(`/agents/${agentId}/chats`);
   return res.data;
-}
+};
 
-export async function sendMessage(agentId, message) {
+export const sendMessage = async (agentId, message) => {
   const res = await api.post(`/chat/${agentId}`, { message });
   return res.data;
-}
+};
 
 // -------------------- AUTENTICACIÓN --------------------
 
-export async function loginUser(credentials) {
+export const loginUser = async (credentials) => {
   const res = await api.post('/login', credentials);
   const data = res.data;
 
@@ -128,4 +130,4 @@ export async function loginUser(credentials) {
   }
 
   return data;
-}
+};
