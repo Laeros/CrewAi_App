@@ -15,8 +15,15 @@ def create_app():
     db.init_app(app)
     migrate = Migrate(app, db)
 
-    # Habilitar CORS para el frontend en localhost:5173
-    CORS(app, resources={r"/api/*": {"origins": "http://localhost:5173"}})
+    # ✅ Habilitar CORS tanto para desarrollo local como para Vercel
+    CORS(app, resources={
+        r"/api/*": {
+            "origins": [
+                "http://localhost:5173",  # Para desarrollo local
+                "https://crew-ai-app-w8ef.vercel.app"  # Tu frontend en Vercel
+            ]
+        }
+    })
 
     # Registrar rutas
     from .routes import api_bp
