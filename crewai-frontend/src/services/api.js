@@ -3,7 +3,7 @@ import axios from 'axios';
 
 // Crear instancia de axios con configuración base
 const api = axios.create({
-  baseURL: 'http://localhost:5000/api', // Asegúrate que coincida con tu backend
+  baseURL: 'https://crewaiapp-production.up.railway.app';
   headers: {
     'Content-Type': 'application/json',
   },
