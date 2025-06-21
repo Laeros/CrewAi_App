@@ -16,3 +16,4 @@ python-dotenv
 SQLAlchemy
 litellm
 langchain
+Flask-Cors
