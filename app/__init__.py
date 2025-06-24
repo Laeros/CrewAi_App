@@ -29,8 +29,4 @@ def create_app():
     from .routes import api_bp
     app.register_blueprint(api_bp, url_prefix='/api')
 
-    # 👇 Crear las tablas en la base de datos (solo temporal)
-    with app.app_context():
-        db.create_all()
-
     return app
