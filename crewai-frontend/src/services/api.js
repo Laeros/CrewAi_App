@@ -1,8 +1,11 @@
 // src/services/api.js
 import axios from 'axios';
 
-// Usar variable de entorno si existe, sino usar localhost por defecto
-const baseURL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api';
+// Base URL dinámica por entorno
+const baseURL =
+  import.meta.env.MODE === 'development'
+    ? 'http://localhost:5000/api'
+    : 'https://crewaiapp-production.up.railway.app/api'; // tu backend en Railway
 
 // Crear instancia de axios
 const api = axios.create({
