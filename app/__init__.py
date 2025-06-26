@@ -15,8 +15,9 @@ def create_app():
     db.init_app(app)
     migrate = Migrate(app, db)
 
-    # ✅ Habilitar CORS para todos los orígenes (⚠️ sólo en desarrollo o pruebas)
-    CORS(app, resources={r"/api/*": {"origins": "*"}})
+    # ✅ Leer orígenes permitidos desde la variable de entorno
+    cors_origins = os.getenv("CORS_ALLOWED_ORIGINS", "*")
+    CORS(app, resources={r"/api/*": {"origins": cors_origins.split(",")}})
 
     # Registrar rutas
     from .routes import api_bp
